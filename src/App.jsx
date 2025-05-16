@@ -34,7 +34,7 @@ int main() {
     setIsRunning(true);
 
     try {
-      const response = await axios.post("http://127.0.0.1:5000/run", {
+      const response = await axios.post("https://codeeditor-flask-backend.onrender.com/run", {
         code: code,
         language: language,
       });
