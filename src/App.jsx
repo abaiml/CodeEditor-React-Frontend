@@ -136,7 +136,7 @@ int main() {
           {/* Output Console */}
           <div
             className={`
-              flex flex-col border rounded overflow-hidden
+              flex flex-col border rounded 
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
               transition-all duration-700 ease-in-out
             `}
@@ -152,7 +152,7 @@ int main() {
               <h2 className="font-semibold">Output</h2>
               <button className="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" onClick={handleClear}>Clear</button>
             </div>
-            <div className="flex-grow">
+            <div className="flex-grow overflow-hidden">
               <OutputConsole output={output} isDarkMode={isDarkMode} />
             </div>
           </div>
