@@ -82,17 +82,21 @@ int main() {
         </div>
 
         {/* Editor + Output */}
-        <div className={`flex ${isVerticalLayout ? "flex-col" : "flex-row"} w-full h-full gap-2 overflow-hidden `}>
+        <div className={`flex ${isVerticalLayout ? "flex-col" : "flex-row"} w-full h-full gap-2 overflow-hidden min-h-0`}>
           
           {/* Code Editor */}
           <div
             className={`
-              ${isVerticalLayout ? "flex-[1] min-h-0" : "w-2/3 h-full"}
-              flex flex-col border rounded
+              flex flex-col border rounded overflow-hidden
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
-              transition-all duration-900 ease-in-out
+              transition-all duration-700 ease-in-out
             `}
+            style={{
+              width: isVerticalLayout ? "100%" : "75%",
+              height: isVerticalLayout ? "50%" : "100%",
+            }}
           >
+
             {/* Sticky Header */}
             <div className={`
               ${isDarkMode ? "bg-gray-800" : "bg-gray-200"}
@@ -132,12 +136,16 @@ int main() {
           {/* Output Console */}
           <div
             className={`
-              ${isVerticalLayout ? "flex-[1] min-h-0" : "flex-[1] h-full"}
-              flex flex-col border rounded overflow-auto
+              flex flex-col border rounded overflow-hidden
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
-              transition-all duration-900 ease-in-out
+              transition-all duration-700 ease-in-out
             `}
+            style={{
+              width: isVerticalLayout ? "100%" : "25%",
+              height: isVerticalLayout ? "50%" : "100%",
+            }}
           >
+
 
 
             <div className={`${isDarkMode ? "bg-gray-800" : "bg-gray-200"} flex justify-between items-center p-3 rounded-t`}>
@@ -154,3 +162,4 @@ int main() {
 
   );
 }
+
