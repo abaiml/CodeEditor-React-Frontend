@@ -87,8 +87,8 @@ int main() {
           {/* Code Editor */}
           <div
             className={`
-              ${isVerticalLayout ? "flex-1 min-h-[200px]" : "w-2/3 min-w-[300px] h-full"}
-              flex flex-col border rounded overflow-hidden
+              ${isVerticalLayout ? "flex-[1] min-h-0" : "w-2/3 h-full"}
+              flex flex-col border rounded
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
               transition-all duration-900 ease-in-out
             `}
@@ -111,7 +111,13 @@ int main() {
                   onClick={handleRun}
                   disabled={isRunning}
                 >
-                  {isRunning ? <span className="flex items-center gap-2 animate-spin">&#9696; Running...</span> : "Run Code"}
+                  {isRunning ? (
+                    <div className="flex items-center gap-2">
+                      <span className="animate-spin">&#9696;</span> Running...
+                    </div>
+                  ) : (
+                    "Run Code"
+                  )}
                 </button>
               </div>
             </div>
@@ -127,9 +133,9 @@ int main() {
           <div
             className={`
               ${isVerticalLayout ? "flex-[1] min-h-0" : "flex-[1] h-full"}
-              flex flex-col border rounded
+              flex flex-col border rounded overflow-auto
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
-              transition-all duration-700 ease-in-out
+              transition-all duration-900 ease-in-out
             `}
           >
 
@@ -138,7 +144,7 @@ int main() {
               <h2 className="font-semibold">Output</h2>
               <button className="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" onClick={handleClear}>Clear</button>
             </div>
-            <div className="flex-grow overflow-y-auto overflow-x-hidden">
+            <div className="flex-grow">
               <OutputConsole output={output} isDarkMode={isDarkMode} />
             </div>
           </div>
