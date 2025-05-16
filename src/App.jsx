@@ -34,7 +34,7 @@ int main() {
     setIsRunning(true);
 
     try {
-      const response = await axios.post("https://codeeditor-flask-backend.onrender.com/run", {
+      const response = await axios.post("http://127.0.0.1:5000/run", {
         code: code,
         language: language,
       });
@@ -87,58 +87,58 @@ int main() {
           {/* Code Editor */}
           <div
             className={`
-              ${isVerticalLayout ? "w-full flex-[2]" : "w-2/3 h-full"}
+              ${isVerticalLayout ? "flex-1 min-h-[200px]" : "w-2/3 min-w-[300px] h-full"}
               flex flex-col border rounded overflow-hidden
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
-              transition-all duration-700 ease-in-out
+              transition-all duration-900 ease-in-out
             `}
           >
-            <div className={`${isDarkMode ? "bg-gray-800" : "bg-gray-200"} flex justify-between p-3 rounded-t`}>
-              
+            {/* Sticky Header */}
+            <div className={`
+              ${isDarkMode ? "bg-gray-800" : "bg-gray-200"}
+              flex justify-between p-3 rounded-t z-10 sticky top-0
+            `}>
               <h2 className="text-md font-bold">main.{language === 'javascript' ? 'js' : language === 'cpp' ? 'cpp' : 'py'}</h2>
-             
               <div className="flex gap-2">
-                {/* Toggle Layout Button */}
-                <button className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 flex items-center gap-2" onClick={handleToggleLayout}>
+                <button onClick={handleToggleLayout} className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 flex items-center gap-2">
                   {isVerticalLayout ? <HiOutlineSwitchHorizontal size={20} /> : <HiOutlineSwitchVertical size={20} />}
                 </button>
-
-                {/* Toggle Theme Button */}
-                <button className="px-3 py-2 rounded bg-gray-600 hover:bg-gray-700 transition-all duration-300 text-white flex items-center gap-2" onClick={handleToggleTheme}>
+                <button onClick={handleToggleTheme} className="px-3 py-2 rounded bg-gray-600 hover:bg-gray-700 transition-all duration-300 text-white flex items-center gap-2">
                   {isDarkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
                 </button>
-                <button className="px-3 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                <button
+                  className="px-3 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
                   onClick={handleRun}
-                  disabled={isRunning}>
-                  {isRunning ? (
-                    <div className="flex items-center gap-2">
-                      <span className="animate-spin">&#9696;</span> Running...
-                    </div>
-                  ) : (
-                    "Run Code"
-                  )}
+                  disabled={isRunning}
+                >
+                  {isRunning ? <span className="flex items-center gap-2 animate-spin">&#9696; Running...</span> : "Run Code"}
                 </button>
               </div>
             </div>
-            <div className="flex-grow overflow-auto">
+
+            {/* Scrollable Code Editor Area */}
+            <div className="flex-grow overflow-auto min-h-0">
               <CodeEditor code={code} setCode={setCode} theme={theme} />
             </div>
           </div>
 
+
           {/* Output Console */}
           <div
             className={`
-              ${isVerticalLayout ? "w-full flex-[1]" : "w-1/3 h-full"}
+              ${isVerticalLayout ? "flex-[1] min-h-0" : "flex-[1] h-full"}
               flex flex-col border rounded
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
               transition-all duration-700 ease-in-out
             `}
           >
+
+
             <div className={`${isDarkMode ? "bg-gray-800" : "bg-gray-200"} flex justify-between items-center p-3 rounded-t`}>
               <h2 className="font-semibold">Output</h2>
               <button className="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" onClick={handleClear}>Clear</button>
             </div>
-            <div className="flex-grow ">
+            <div className="flex-grow overflow-y-auto overflow-x-hidden">
               <OutputConsole output={output} isDarkMode={isDarkMode} />
             </div>
           </div>
