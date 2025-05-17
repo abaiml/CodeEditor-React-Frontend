@@ -33,7 +33,7 @@ button{
   content: "";
   display: inline-block;
   width: 1ch;
-  height: 1em;
+  height: 1.2em;
   background-color: currentColor;
   animation: blink 1s step-start infinite;
   vertical-align: bottom;
