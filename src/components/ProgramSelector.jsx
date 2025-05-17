@@ -1,3 +1,4 @@
+import React from "react";
 import { SiPython, SiJavascript, SiCplusplus } from "react-icons/si";
 
 export default function ProgramSelector({ selected, onSelect, isDarkMode }) {
