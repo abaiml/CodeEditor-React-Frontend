@@ -1,4 +1,3 @@
-import React from "react";
 import { SiPython, SiJavascript, SiCplusplus } from "react-icons/si";
 
 export default function ProgramSelector({ selected, onSelect, isDarkMode }) {
@@ -13,7 +12,7 @@ export default function ProgramSelector({ selected, onSelect, isDarkMode }) {
       {languages.map((lang) => (
         <button
           key={lang.name}
-          title={lang.title}                 {/* tooltip text */}
+          title={lang.title}                 
           className={`text-2xl p-2 rounded-lg relative transition-all duration-300 ease-in-out
             ${selected === lang.name ? (isDarkMode ? "bg-gray-900" : "bg-white") : ""}
             ${lang.color}
