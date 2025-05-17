@@ -119,20 +119,29 @@ int main() {
   const handleToggleLayout = () => {
     setIsVerticalLayout((prev) => !prev);
   };
-const handleSaveCode = () => {
-  const extMap = {
-    python: "py",
-    javascript: "js",
-    cpp: "cpp"
-  };
-  const blob = new Blob([code], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `main.${extMap[language] || 'txt'}`;
-  a.click();
-  URL.revokeObjectURL(url);
+// Modern browsers: show Save As dialog and write file
+const handleSave = async () => {
+  try {
+    const opts = {
+      suggestedName: "my_code.txt",
+      types: [
+        {
+          description: "Text Files",
+          accept: { "text/plain": [".txt", ".js", ".py", ".cpp"] },
+        },
+      ],
+    };
+
+    const handle = await window.showSaveFilePicker(opts);
+    const writable = await handle.createWritable();
+    await writable.write(code); // `code` is your text content
+    await writable.close();
+    alert("File saved successfully.");
+  } catch (err) {
+    console.error("Save cancelled or failed:", err);
+  }
 };
+
 
   return (
     <div className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"} h-screen w-screen p-4 flex flex-col overflow-hidden`}>
