@@ -51,7 +51,7 @@ int main() {
     setTerminalOutput("");
     setIsRunning(true);
 
-    const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws"); // Change to your backend WS URL
+    const socket = new WebSocket("ws://127.0.0.1:8000/ws"); // Change to your backend WS URL
 
     socket.onopen = () => {
       // Send initial code + language as JSON
@@ -59,8 +59,19 @@ int main() {
     };
 
     socket.onmessage = (event) => {
-      setTerminalOutput((prev) => prev + event.data);
-    };
+  try {
+    const json = JSON.parse(event.data);
+    if (json.type === "done") {
+      // ✅ Execution is done — stop loading
+      setLoading(false);
+    } else {
+      setTerminalOutput((prev) => prev + "\n" + event.data);
+    }
+  } catch {
+    // Plain text (not JSON)
+    setTerminalOutput((prev) => prev + "\n" + event.data);
+  }
+};
 
     socket.onerror = (error) => {
       setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
@@ -133,7 +144,7 @@ int main() {
               transition-all duration-700 ease-in-out
             `}
             style={{
-              width: isVerticalLayout ? "100%" : "50%",
+              width: isVerticalLayout ? "100%" : "75%",
               height: isVerticalLayout ? "50%" : "100%",
             }}
           >
@@ -176,7 +187,7 @@ int main() {
               transition-all duration-700 ease-in-out
             `}
             style={{
-              width: isVerticalLayout ? "100%" : "50%",
+              width: isVerticalLayout ? "100%" : "25%",
               height: isVerticalLayout ? "50%" : "100%",
             }}
           >
