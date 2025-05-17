@@ -44,6 +44,7 @@ int main() {
   }, [terminalOutput]);
 
   const handleRun = () => {
+    if (isRunning) return;  // Guard to prevent multiple runs
     if (ws) {
       ws.close();
       setWs(null);
@@ -63,10 +64,8 @@ int main() {
       try {
         const json = JSON.parse(event.data);
         if (json.type === "done") {
-          setTimeout(() => {
-            setTerminalOutput((prev) => prev + "\n\n[Process exited]");
-            setIsRunning(false);
-          }, 200);
+          setIsRunning(false);
+          setTerminalOutput((prev) => prev + "\n\n[Process exited]");
         } else if (json.output) {
           setTerminalOutput((prev) => prev + json.output);
         }
@@ -76,17 +75,20 @@ int main() {
     };
 
     socket.onerror = (error) => {
-      setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
       setIsRunning(false);
+      setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
     };
 
     socket.onclose = () => {
-      setTerminalOutput((prev) => prev + "\n\n[Process exited]");
       setIsRunning(false);
+      if (!terminalOutput.includes("[Process exited]")) {
+        setTerminalOutput((prev) => prev + "\n\n[Process exited]");
+      }
     };
   };
 
   const handleStop = () => {
+    if (!isRunning) return;  // Guard to prevent stopping when not running
     if (ws) {
       ws.close();
       setWs(null);
@@ -98,14 +100,18 @@ int main() {
   const handleTerminalInput = (e) => {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
+    e.preventDefault();
+
     if (e.key === "Backspace") {
       ws.send("\b");
+      setTerminalOutput((prev) => prev.slice(0, -1));
     } else if (e.key === "Enter") {
       ws.send("\n");
+      setTerminalOutput((prev) => prev + "\n");
     } else if (e.key.length === 1) {
       ws.send(e.key);
+      setTerminalOutput((prev) => prev + e.key); // echo typed input
     }
-    e.preventDefault();
   };
 
   const handleClearTerminal = () => {
@@ -175,7 +181,7 @@ int main() {
                   onClick={handleSave}
                   className="ml-2 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white flex items-center gap-2"
                 >
-                  <FaSave size={20} /> Save Code
+                  <FaSave size={20} />
                 </button>
                 <button onClick={handleToggleLayout} className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 flex items-center gap-2">
                   {isVerticalLayout ? <HiOutlineSwitchHorizontal size={20} /> : <HiOutlineSwitchVertical size={20} />}
