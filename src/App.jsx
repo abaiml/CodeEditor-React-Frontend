@@ -51,7 +51,7 @@ int main() {
     setTerminalOutput("");
     setIsRunning(true);
 
-    const socket = new WebSocket("ws://127.0.0.1:8000/ws"); // Change to your backend WS URL
+    const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws");
 
     socket.onopen = () => {
       // Send initial code + language as JSON
