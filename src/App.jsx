@@ -1,22 +1,23 @@
 import CodeEditor from "./components/CodeEditor";
-import OutputConsole from "./components/OutputConsole";
 import ProgramSelector from "./components/ProgramSelector";
-import { useEffect, useState } from "react";
+import TerminalComponent from "./components/Terminal";
+import { useEffect, useState, useRef, forwardRef } from "react";
 import "./index.css";
-import axios from "axios";
 import { HiOutlineSwitchHorizontal, HiOutlineSwitchVertical } from "react-icons/hi";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 
 export default function App() {
   const [code, setCode] = useState("");
-  const [output, setOutput] = useState("");
   const [theme, setTheme] = useState("vs-dark");
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isVerticalLayout, setIsVerticalLayout] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [language, setLanguage] = useState(() => {
-  return localStorage.getItem("selectedLanguage") || "python";
-});
+    return localStorage.getItem("selectedLanguage") || "python";
+  });
+
+  // Ref for TerminalComponent to call run method
+  const terminalRef = useRef(null);
 
   const templates = {
     python: `print("Hello, Python!")`,
@@ -30,25 +31,10 @@ int main() {
 }`,
   };
 
-  const handleRun = async () => {
-    setIsRunning(true);
-
-    try {
-      const response = await axios.post("https://codeeditor-production-0337.up.railway.app/run", {
-        code: code,
-        language: language,
-      });
-      setOutput(response.data.output);
-    } catch (err) {
-      setOutput("Error: " + err.message);
-    } finally {
-      setIsRunning(false);
-    }
-};
-
-  const handleClear = () => {
-    setOutput("");
-  };
+  useEffect(() => {
+    setCode(templates[language] || "");
+    localStorage.setItem("selectedLanguage", language);
+  }, [language]);
 
   const handleToggleTheme = () => {
     setTheme((prev) => (prev === "vs-dark" ? "light" : "vs-dark"));
@@ -59,55 +45,66 @@ int main() {
     setIsVerticalLayout((prev) => !prev);
   };
 
-  useEffect(() => {
-    setCode(templates[language] || "");
-    localStorage.setItem("selectedLanguage", language);
-  }, [language]);
+  // When Run button clicked, call terminal's method to send run command
+  const handleRun = () => {
+    if (terminalRef.current && code.trim()) {
+      setIsRunning(true);
+      terminalRef.current.runCode({
+        code,
+        language,
+        onFinish: () => setIsRunning(false), // callback to reset isRunning
+      });
+    }
+  };
+
+  // WebSocket URL for terminal backend
+  const wsUrl = "ws://codeeditor-production-0337.up.railway.app/ws";
 
   return (
     <div className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"} h-screen w-screen p-4 flex flex-col overflow-hidden`}>
 
-      {/* Header Section */}
+      {/* Header */}
       <div className="flex flex-col gap-2 flex-none">
         <h1 className="text-3xl font-bold">Online Code Editor</h1>
         <h3 className="text-lg font-bold">{language} Compiler</h3>
       </div>
 
-      {/* Main layout with Sidebar + Editor/Output */}
-      <div className="flex flex-row w-full h-full gap-2 mt-2 overflow-hidden ">
-        
+      {/* Main layout: Sidebar + Editor + Terminal */}
+      <div className="flex flex-row w-full h-full gap-2 mt-2 overflow-hidden">
+
         {/* Sidebar */}
         <div className={`w-16 h-full flex flex-col items-center rounded ${isDarkMode ? "bg-gray-800 text-white" : "bg-gray-200 text-black"}`}>
           <ProgramSelector selected={language} onSelect={setLanguage} isDarkMode={isDarkMode} />
         </div>
 
-        {/* Editor + Output */}
+        {/* Editor + Terminal */}
         <div className={`flex ${isVerticalLayout ? "flex-col" : "flex-row"} w-full h-full gap-2 overflow-hidden min-h-0`}>
-          
+
           {/* Code Editor */}
           <div
-            className={`
-              flex flex-col border rounded overflow-hidden
+            className={`flex flex-col border rounded overflow-hidden
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
               transition-all duration-700 ease-in-out
             `}
             style={{
-              width: isVerticalLayout ? "100%" : "75%",
+              width: isVerticalLayout ? "100%" : "60%",
               height: isVerticalLayout ? "50%" : "100%",
             }}
           >
-
-            {/* Sticky Header */}
-            <div className={`
-              ${isDarkMode ? "bg-gray-800" : "bg-gray-200"}
-              flex justify-between p-3 rounded-t z-10 sticky top-0
-            `}>
-              <h2 className="text-md font-bold">main.{language === 'javascript' ? 'js' : language === 'cpp' ? 'cpp' : 'py'}</h2>
+            {/* Sticky header with buttons */}
+            <div className={`${isDarkMode ? "bg-gray-800" : "bg-gray-200"} flex justify-between p-3 rounded-t z-10 sticky top-0`}>
+              <h2 className="text-md font-bold">main.{language === "javascript" ? "js" : language === "cpp" ? "cpp" : "py"}</h2>
               <div className="flex gap-2">
-                <button onClick={handleToggleLayout} className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 flex items-center gap-2">
+                <button
+                  onClick={handleToggleLayout}
+                  className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 flex items-center gap-2"
+                >
                   {isVerticalLayout ? <HiOutlineSwitchHorizontal size={20} /> : <HiOutlineSwitchVertical size={20} />}
                 </button>
-                <button onClick={handleToggleTheme} className="px-3 py-2 rounded bg-gray-600 hover:bg-gray-700 transition-all duration-300 text-white flex items-center gap-2">
+                <button
+                  onClick={handleToggleTheme}
+                  className="px-3 py-2 rounded bg-gray-600 hover:bg-gray-700 transition-all duration-300 text-white flex items-center gap-2"
+                >
                   {isDarkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
                 </button>
                 <button
@@ -126,40 +123,33 @@ int main() {
               </div>
             </div>
 
-            {/* Scrollable Code Editor Area */}
+            {/* Code Editor Area */}
             <div className="flex-grow overflow-auto min-h-0">
               <CodeEditor code={code} setCode={setCode} theme={theme} />
             </div>
           </div>
 
-
-          {/* Output Console */}
+          {/* Terminal */}
           <div
-            className={`
-              flex flex-col border rounded 
+            className={`flex flex-col border rounded
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
               transition-all duration-700 ease-in-out
             `}
             style={{
-              width: isVerticalLayout ? "100%" : "25%",
+              width: isVerticalLayout ? "100%" : "40%",
               height: isVerticalLayout ? "50%" : "100%",
             }}
           >
-
-
-
             <div className={`${isDarkMode ? "bg-gray-800" : "bg-gray-200"} flex justify-between items-center p-3 rounded-t`}>
-              <h2 className="font-semibold">Output</h2>
-              <button className="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" onClick={handleClear}>Clear</button>
+              <h2 className="font-semibold">Terminal</h2>
+              {/* Optionally add clear/reset buttons here */}
             </div>
-            <div className="flex-grow overflow-hidden">
-              <OutputConsole output={output} isDarkMode={isDarkMode} />
+            <div className="flex-grow overflow-auto">
+              <TerminalComponent ref={terminalRef} wsUrl={wsUrl} />
             </div>
           </div>
         </div>
       </div>
     </div>
-
   );
 }
-
