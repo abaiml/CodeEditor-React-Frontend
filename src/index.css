@@ -36,8 +36,10 @@ button{
   height: 1.2em;
   background-color: currentColor;
   animation: blink 1s step-start infinite;
-  vertical-align: bottom;
+  vertical-align: text-top; /* Lift it above the baseline */
+  margin-left: 2px; /* Optional: add a little space if it looks cramped */
 }
+
 
 @keyframes blink {
   50% {
