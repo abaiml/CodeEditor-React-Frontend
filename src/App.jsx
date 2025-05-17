@@ -174,7 +174,7 @@ int main() {
             )}
             {language === "javascript" && (
               <>
-                <p><strong>Tip:</strong> In this editor, use Node’s <code>readline</code> module to read input&mdash;<em>not</em> <code>prompt()</code>.</p>
+                <p><strong>Tip:</strong> Use <code>let</code> and <code>const</code> to declare variables instead of <code>var</code> for better scope control.</p>
                 <a
                   href="https://www.w3schools.com/js/"
                   target="_blank"
@@ -224,18 +224,28 @@ int main() {
                 <button
                   onClick={handleSave}
                   className="ml-2 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white flex items-center gap-2"
+                  title="Save"
                 >
                   <FaSave size={20} />
                 </button>
-                <button onClick={handleToggleLayout} className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 flex items-center gap-2">
+                <button
+                  onClick={handleToggleLayout}
+                  className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 flex items-center gap-2"
+                  title="Toggle Layout"
+                >
                   {isVerticalLayout ? <HiOutlineSwitchHorizontal size={20} /> : <HiOutlineSwitchVertical size={20} />}
                 </button>
-                <button onClick={handleToggleTheme} className="px-3 py-2 rounded bg-gray-600 hover:bg-gray-700 transition-all duration-300 text-white flex items-center gap-2">
+                <button
+                  onClick={handleToggleTheme}
+                  className="px-3 py-2 rounded bg-gray-600 hover:bg-gray-700 transition-all duration-300 text-white flex items-center gap-2"
+                  title="Toggle Theme"
+                >
                   {isDarkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
                 </button>
                 <button
                   className={`px-3 py-2 rounded ${isRunning ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"} text-white`}
                   onClick={isRunning ? handleStop : handleRun}
+                  title={isRunning ? "Stop" : "Run"}
                 >
                   {isRunning ? "Stop Code" : "Run Code"}
                 </button>
@@ -263,6 +273,7 @@ int main() {
                 className="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700"
                 onClick={handleClearTerminal}
                 disabled={isRunning}
+                title="Clear Terminal"
               >
                 Clear
               </button>
