@@ -44,13 +44,13 @@ int main() {
   }, [terminalOutput]);
 
   const handleRun = () => {
+    setTerminalOutput("");  // Clear terminal on run
+
     if (isRunning) return;  // Guard to prevent multiple runs
     if (ws) {
       ws.close();
       setWs(null);
     }
-
-    setTerminalOutput("");
     setIsRunning(true);
 
     const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws");
