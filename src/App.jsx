@@ -95,7 +95,7 @@ int main() {
     setTerminalOutput(freshOutput);
   };
 };
-    };
+
 
   const handleStop = () => {
     if (!isRunning) return;
