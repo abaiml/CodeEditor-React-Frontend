@@ -51,7 +51,6 @@ int main() {
       ws.close();
       setWs(null);
     }
-    setTerminalOutput("");
     setIsRunning(true);
 
     const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws");
@@ -178,18 +177,19 @@ int main() {
         </>
       )}
       {language === "javascript" && (
-        <>
-          <p><strong>Tip:</strong> Use <code>prompt()</code> to get user input in the browser.</p>
-          <a
-            href="https://www.w3schools.com/js/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-blue-500"
-          >
-            Learn JavaScript Basics →
-          </a>
-        </>
-      )}
+  <>
+    <p><strong>Tip:</strong> In this editor, use Node’s <code>readline</code> module to read input&mdash;<em>not</em> <code>prompt()</code>.</p>
+    <a
+      href="https://www.w3schools.com/js/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="underline hover:text-blue-500"
+    >
+      Learn JavaScript Basics →
+    </a>
+  </>
+)}
+
       {language === "cpp" && (
         <>
           <p><strong>Tip:</strong> Use <code>cin</code> to read input in C++.</p>
