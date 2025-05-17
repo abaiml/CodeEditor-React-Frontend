@@ -29,6 +29,22 @@ button{
   cursor: pointer;
 }
 
+.terminal:focus::after {
+  content: "";
+  display: inline-block;
+  width: 1ch;
+  height: 1em;
+  background-color: currentColor;
+  animation: blink 1s step-start infinite;
+  vertical-align: bottom;
+}
+
+@keyframes blink {
+  50% {
+    background-color: transparent;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
