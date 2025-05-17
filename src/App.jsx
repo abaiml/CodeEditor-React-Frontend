@@ -44,9 +44,11 @@ int main() {
   const handleRun = () => {
   if (isRunning) return;
 
+  // Clear output and reset state
+  setTerminalOutput("");
   setIsRunning(true);
-  setTerminalOutput("");  // Clear once, right here
 
+  // Close previous socket if exists
   if (ws) {
     ws.close();
     setWs(null);
@@ -66,11 +68,12 @@ int main() {
       const json = JSON.parse(event.data);
       if (json.type === "done") {
         setIsRunning(false);
-        setTerminalOutput((prev) => prev + "\n\n[Process exited]");
+        // Do NOT append "[Process exited]" here
       } else if (json.output) {
-        setTerminalOutput((prev) => prev + json.output);
+        setTerminalOutput((prev) => prev + json.output.replace(/\[Process exited\]/g, ""));
       }
-    } catch (err) {
+    } catch {
+      // Fallback for raw text output
       setTerminalOutput((prev) => prev + event.data);
     }
   };
@@ -82,11 +85,15 @@ int main() {
 
   socket.onclose = () => {
     setIsRunning(false);
-    setTerminalOutput((prev) =>
-      prev.includes("[Process exited]") ? prev : prev + "\n\n[Process exited]"
-    );
+    setTerminalOutput((prev) => {
+      const clean = prev.trimEnd();
+      return clean.endsWith("[Process exited]")
+        ? clean
+        : clean + "\n\n[Process exited]";
+    });
   };
 };
+
 
 
   const handleStop = () => {
