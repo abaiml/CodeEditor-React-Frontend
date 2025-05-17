@@ -42,56 +42,52 @@ int main() {
   }, [terminalOutput]);
 
   const handleRun = () => {
-    setTerminalOutput("");
+  if (isRunning) return;
 
-    if (isRunning) return;
-    if (ws) {
-      ws.close();
-      setWs(null);
-    }
-    setIsRunning(true);
+  setIsRunning(true);
+  setTerminalOutput("");  // Clear once, right here
 
-    const token = encodeURIComponent(import.meta.env.VITE_WS_TOKEN);   
-    const WS_URL = `${import.meta.env.VITE_WS_URL}?t=${token}`;        
-    const socket = new WebSocket(WS_URL);
-    setWs(socket);
+  if (ws) {
+    ws.close();
+    setWs(null);
+  }
 
-    
+  const token = encodeURIComponent(import.meta.env.VITE_WS_TOKEN);
+  const WS_URL = `${import.meta.env.VITE_WS_URL}?t=${token}`;
+  const socket = new WebSocket(WS_URL);
+  setWs(socket);
 
   socket.onopen = () => {
-    setTerminalOutput(""); 
     socket.send(JSON.stringify({ code, language }));
   };
 
   socket.onmessage = (event) => {
-  try {
-    const json = JSON.parse(event.data);
-    if (json.type === "done") {
-      setIsRunning(false);
-      setTerminalOutput((prev) => prev + "\n\n[Process exited]");
-    } else if (json.output) {
-      setTerminalOutput((prev) =>
-        prev + json.output.replace(/\[Process exited\]/g, "")
-      );
+    try {
+      const json = JSON.parse(event.data);
+      if (json.type === "done") {
+        setIsRunning(false);
+        setTerminalOutput((prev) => prev + "\n\n[Process exited]");
+      } else if (json.output) {
+        setTerminalOutput((prev) => prev + json.output);
+      }
+    } catch (err) {
+      setTerminalOutput((prev) => prev + event.data);
     }
-  } catch (err) {
-    // Handle non-JSON output
-    setTerminalOutput((prev) => prev + event.data);
-  }
-};
+  };
 
   socket.onerror = (error) => {
-  setIsRunning(false);
-  setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
-};
+    setIsRunning(false);
+    setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
+  };
 
   socket.onclose = () => {
-  setIsRunning(false);
-  setTerminalOutput((prev) => {
-    return prev.includes("[Process exited]") ? prev : prev + "\n\n[Process exited]";
-  });
+    setIsRunning(false);
+    setTerminalOutput((prev) =>
+      prev.includes("[Process exited]") ? prev : prev + "\n\n[Process exited]"
+    );
+  };
 };
-  }
+
 
   const handleStop = () => {
     if (!isRunning) return;
