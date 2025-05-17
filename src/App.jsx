@@ -29,21 +29,19 @@ int main() {
 }`
   };
 
+  // Clear terminal & load template on language change
   useEffect(() => {
     setCode(templates[language] || "");
-  setTerminalOutput("");         
-  localStorage.setItem("selectedLanguage", language);
+    setTerminalOutput("");
+    localStorage.setItem("selectedLanguage", language);
   }, [language]);
 
+  // Auto-scroll terminal
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [terminalOutput]);
-
-  useEffect(() => {
-    if (terminalRef.current) terminalRef.current.focus();
-  }, [ws]);
 
   const handleRun = () => {
     if (ws) {
@@ -54,7 +52,7 @@ int main() {
     setTerminalOutput("");
     setIsRunning(true);
 
-    const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws"); // Change if hosted elsewhere
+    const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws");
     setWs(socket);
 
     socket.onopen = () => {
@@ -62,23 +60,20 @@ int main() {
     };
 
     socket.onmessage = (event) => {
-  try {
-    const json = JSON.parse(event.data);
-
-    if (json.type === "done") {
-      // Delay `[Process exited]` so output comes first
-      setTimeout(() => {
-        setTerminalOutput((prev) => prev + "\n\n[Process exited]");
-        setIsRunning(false);
-      }, 200); 
-    } else if (json.output) {
-      setTerminalOutput((prev) => prev + json.output);
-    }
-  } catch {
-    setTerminalOutput((prev) => prev + event.data);
-  }
-};
-
+      try {
+        const json = JSON.parse(event.data);
+        if (json.type === "done") {
+          setTimeout(() => {
+            setTerminalOutput((prev) => prev + "\n\n[Process exited]");
+            setIsRunning(false);
+          }, 200);
+        } else if (json.output) {
+          setTerminalOutput((prev) => prev + json.output);
+        }
+      } catch {
+        setTerminalOutput((prev) => prev + event.data);
+      }
+    };
 
     socket.onerror = (error) => {
       setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
@@ -91,19 +86,25 @@ int main() {
     };
   };
 
+  const handleStop = () => {
+    if (ws) {
+      ws.close();
+      setWs(null);
+      setIsRunning(false);
+      setTerminalOutput((prev) => prev + "\n\n[Execution stopped]");
+    }
+  };
+
   const handleTerminalInput = (e) => {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-    const key = e.key;
-
-    if (key === "Backspace") {
+    if (e.key === "Backspace") {
       ws.send("\b");
-    } else if (key === "Enter") {
+    } else if (e.key === "Enter") {
       ws.send("\n");
-    } else if (key.length === 1) {
-      ws.send(key);
+    } else if (e.key.length === 1) {
+      ws.send(e.key);
     }
-
     e.preventDefault();
   };
 
@@ -119,29 +120,30 @@ int main() {
   const handleToggleLayout = () => {
     setIsVerticalLayout((prev) => !prev);
   };
-// Modern browsers: show Save As dialog and write file
-const handleSave = async () => {
-  try {
-    const opts = {
-      suggestedName: "my_code.txt",
-      types: [
-        {
-          description: "Text Files",
-          accept: { "text/plain": [".txt", ".js", ".py", ".cpp"] },
-        },
-      ],
-    };
 
-    const handle = await window.showSaveFilePicker(opts);
-    const writable = await handle.createWritable();
-    await writable.write(code); // `code` is your text content
-    await writable.close();
-    alert("File saved successfully.");
-  } catch (err) {
-    console.error("Save cancelled or failed:", err);
-  }
-};
-
+  const handleSave = async () => {
+    try {
+      const extension = language === "python" ? ".py" : language === "javascript" ? ".js" : ".cpp";
+      const opts = {
+        suggestedName: `my_code${extension}`,
+        types: [
+          {
+            description: "Code Files",
+            accept: {
+              "text/plain": [".py", ".js", ".cpp"],
+            },
+          },
+        ],
+      };
+      const handle = await window.showSaveFilePicker(opts);
+      const writable = await handle.createWritable();
+      await writable.write(code);
+      await writable.close();
+      alert("File saved successfully.");
+    } catch (err) {
+      console.error("Save cancelled or failed:", err);
+    }
+  };
 
   return (
     <div className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"} h-screen w-screen p-4 flex flex-col overflow-hidden`}>
@@ -182,17 +184,10 @@ const handleSave = async () => {
                   {isDarkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
                 </button>
                 <button
-                  className="px-3 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-                  onClick={handleRun}
-                  disabled={isRunning}
+                  className={`px-3 py-2 rounded ${isRunning ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"} text-white`}
+                  onClick={isRunning ? handleStop : handleRun}
                 >
-                  {isRunning ? (
-                    <div className="flex items-center gap-2">
-                      <span className="animate-spin">&#9696;</span> Running...
-                    </div>
-                  ) : (
-                    "Run Code"
-                  )}
+                  {isRunning ? "Stop Code" : "Run Code"}
                 </button>
               </div>
             </div>
