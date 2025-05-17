@@ -156,6 +156,39 @@ int main() {
       <div className="flex flex-col gap-2 flex-none">
         <h1 className="text-3xl font-bold">Online Code Editor</h1>
         <h3 className="text-lg font-bold">{language} Compiler</h3>
+        <div className="text-sm">
+    📚{" "}
+    {language === "python" && (
+      <a
+        href="https://www.w3schools.com/python/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline hover:text-blue-500"
+      >
+        Python Tutorial
+      </a>
+    )}
+    {language === "javascript" && (
+      <a
+        href="https://www.w3schools.com/js/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline hover:text-blue-500"
+      >
+        JavaScript Tutorial
+      </a>
+    )}
+    {language === "cpp" && (
+      <a
+        href="https://www.w3schools.com/cpp/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline hover:text-blue-500"
+      >
+        C++ Tutorial
+      </a>
+    )}
+  </div>
       </div>
 
       <div className="flex flex-row w-full h-full gap-2 mt-2 overflow-hidden">
