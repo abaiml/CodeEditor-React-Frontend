@@ -170,7 +170,7 @@ const handleSave = async () => {
               <h2 className="text-md font-bold">main.{language === "javascript" ? "js" : language === "cpp" ? "cpp" : "py"}</h2>
               <div className="flex gap-2">
                 <button
-                  onClick={handleSaveCode}
+                  onClick={handleSave}
                   className="ml-2 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white flex items-center gap-2"
                 >
                   <FaSave size={20} /> Save Code
