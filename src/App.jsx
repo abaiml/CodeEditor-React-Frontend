@@ -56,11 +56,10 @@ int main() {
     const socket = new WebSocket(WS_URL);
     setWs(socket);
 
-    let freshOutput = ""; // Local buffer
+    
 
   socket.onopen = () => {
-    freshOutput = ""; // clear buffer when connection opens
-    setTerminalOutput(""); // reset visible output
+    setTerminalOutput(""); 
     socket.send(JSON.stringify({ code, language }));
   };
 
@@ -71,20 +70,19 @@ int main() {
       setIsRunning(false);
       setTerminalOutput((prev) => prev + "\n\n[Process exited]");
     } else if (json.output) {
-      freshOutput += json.output;
-      setTerminalOutput((prev) => prev + json.output);
-    }
+  setTerminalOutput((prev) =>
+    prev + json.output.replace(/\[Process exited\]/g, "")
+  );
   } catch {
-    freshOutput += event.data;
+    // Handle non-JSON output
     setTerminalOutput((prev) => prev + event.data);
   }
 };
 
   socket.onerror = (error) => {
-    setIsRunning(false);
-    freshOutput += `\nWebSocket error: ${error.message}`;
-    setTerminalOutput(freshOutput);
-  };
+  setIsRunning(false);
+  setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
+};
 
   socket.onclose = () => {
   setIsRunning(false);
