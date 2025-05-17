@@ -29,14 +29,12 @@ int main() {
 }`
   };
 
-  // Clear terminal & load template on language change
   useEffect(() => {
     setCode(templates[language] || "");
     setTerminalOutput("");
     localStorage.setItem("selectedLanguage", language);
   }, [language]);
 
-  // Auto-scroll terminal
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
@@ -44,16 +42,17 @@ int main() {
   }, [terminalOutput]);
 
   const handleRun = () => {
-    setTerminalOutput("");  // Clear terminal on run
+    setTerminalOutput("");
 
-    if (isRunning) return;  // Guard to prevent multiple runs
+    if (isRunning) return;
     if (ws) {
       ws.close();
       setWs(null);
     }
     setIsRunning(true);
 
-    const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws");
+    const WS_URL = `${import.meta.env.VITE_WS_URL}?t=${import.meta.env.VITE_WS_TOKEN}`;
+    const socket = new WebSocket(WS_URL);
     setWs(socket);
 
     socket.onopen = () => {
@@ -88,7 +87,7 @@ int main() {
   };
 
   const handleStop = () => {
-    if (!isRunning) return;  // Guard to prevent stopping when not running
+    if (!isRunning) return;
     if (ws) {
       ws.close();
       setWs(null);
@@ -110,7 +109,7 @@ int main() {
       setTerminalOutput((prev) => prev + "\n");
     } else if (e.key.length === 1) {
       ws.send(e.key);
-      setTerminalOutput((prev) => prev + e.key); // echo typed input
+      setTerminalOutput((prev) => prev + e.key);
     }
   };
 
@@ -154,58 +153,54 @@ int main() {
   return (
     <div className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"} h-screen w-screen p-4 flex flex-col overflow-hidden`}>
       <div className="flex justify-between items-start flex-none mb-2">
-  {/* Left side: Editor title */}
-  <div>
-    <h1 className="text-3xl font-bold">Online Code Editor</h1>
-    <h3 className="text-lg font-bold capitalize">{language} Compiler</h3>
-  </div>
-
-  {/* Right side: Beginner help */}
-  <div className="text-sm max-w-xs text-right">
-    <div className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-      {language === "python" && (
-        <>
-          <p><strong>Tip:</strong> Use <code>input()</code> to take user input.</p>
-          <a
-            href="https://www.w3schools.com/python/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-blue-500"
-          >
-            Learn Python Basics →
-          </a>
-        </>
-      )}
-      {language === "javascript" && (
-  <>
-    <p><strong>Tip:</strong> In this editor, use Node’s <code>readline</code> module to read input&mdash;<em>not</em> <code>prompt()</code>.</p>
-    <a
-      href="https://www.w3schools.com/js/"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="underline hover:text-blue-500"
-    >
-      Learn JavaScript Basics →
-    </a>
-  </>
-)}
-
-      {language === "cpp" && (
-        <>
-          <p><strong>Tip:</strong> Use <code>cin</code> to read input in C++.</p>
-          <a
-            href="https://www.w3schools.com/cpp/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-blue-500"
-          >
-            Learn C++ Basics →
-          </a>
-        </>
-      )}
-    </div>
-  </div>
-</div>
+        <div>
+          <h1 className="text-3xl font-bold">Online Code Editor</h1>
+          <h3 className="text-lg font-bold capitalize">{language} Compiler</h3>
+        </div>
+        <div className="text-sm max-w-xs text-right">
+          <div className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+            {language === "python" && (
+              <>
+                <p><strong>Tip:</strong> Use <code>input()</code> to take user input.</p>
+                <a
+                  href="https://www.w3schools.com/python/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-blue-500"
+                >
+                  Learn Python Basics →
+                </a>
+              </>
+            )}
+            {language === "javascript" && (
+              <>
+                <p><strong>Tip:</strong> In this editor, use Node’s <code>readline</code> module to read input&mdash;<em>not</em> <code>prompt()</code>.</p>
+                <a
+                  href="https://www.w3schools.com/js/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-blue-500"
+                >
+                  Learn JavaScript Basics →
+                </a>
+              </>
+            )}
+            {language === "cpp" && (
+              <>
+                <p><strong>Tip:</strong> Use <code>cin</code> to read input in C++.</p>
+                <a
+                  href="https://www.w3schools.com/cpp/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-blue-500"
+                >
+                  Learn C++ Basics →
+                </a>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="flex flex-row w-full h-full gap-2 mt-2 overflow-hidden">
         <div className={`w-16 h-full flex flex-col items-center rounded ${isDarkMode ? "bg-gray-800 text-white" : "bg-gray-200 text-black"}`}>
