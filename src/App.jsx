@@ -88,6 +88,7 @@ int main() {
     return prev;
   });
 };
+    };
 
   const handleStop = () => {
     if (!isRunning) return;
