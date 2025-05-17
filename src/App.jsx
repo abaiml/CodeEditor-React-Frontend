@@ -80,12 +80,14 @@ int main() {
     };
 
     socket.onclose = () => {
-      setIsRunning(false);
-      if (!terminalOutput.includes("[Process exited]")) {
-        setTerminalOutput((prev) => prev + "\n\n[Process exited]");
-      }
-    };
-  };
+  setIsRunning(false);
+  setTerminalOutput((prev) => {
+    if (!prev.includes("[Process exited]")) {
+      return prev + "\n\n[Process exited]";
+    }
+    return prev;
+  });
+};
 
   const handleStop = () => {
     if (!isRunning) return;
