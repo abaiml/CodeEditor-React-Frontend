@@ -51,7 +51,8 @@ int main() {
     }
     setIsRunning(true);
 
-    const WS_URL = `${import.meta.env.VITE_WS_URL}?t=${import.meta.env.VITE_WS_TOKEN}`;
+    const token = encodeURIComponent(import.meta.env.VITE_WS_TOKEN);   
+    const WS_URL = `${import.meta.env.VITE_WS_URL}?t=${token}`;        
     const socket = new WebSocket(WS_URL);
     setWs(socket);
 
