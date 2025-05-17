@@ -56,37 +56,44 @@ int main() {
     const socket = new WebSocket(WS_URL);
     setWs(socket);
 
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ code, language }));
-    };
+    let freshOutput = ""; // Local buffer
 
-    socket.onmessage = (event) => {
-      try {
-        const json = JSON.parse(event.data);
-        if (json.type === "done") {
-          setIsRunning(false);
-          setTerminalOutput((prev) => prev + "\n\n[Process exited]");
-        } else if (json.output) {
-          setTerminalOutput((prev) => prev + json.output);
-        }
-      } catch {
-        setTerminalOutput((prev) => prev + event.data);
+  socket.onopen = () => {
+    freshOutput = ""; // clear buffer when connection opens
+    setTerminalOutput(""); // reset visible output
+    socket.send(JSON.stringify({ code, language }));
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const json = JSON.parse(event.data);
+      if (json.type === "done") {
+        setIsRunning(false);
+        freshOutput += "\n\n[Process exited]";
+        setTerminalOutput(freshOutput); // Flush once
+      } else if (json.output) {
+        freshOutput += json.output;
+        setTerminalOutput(freshOutput);
       }
-    };
-
-    socket.onerror = (error) => {
-      setIsRunning(false);
-      setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
-    };
-
-    socket.onclose = () => {
-  setIsRunning(false);
-  setTerminalOutput((prev) => {
-    if (!prev.includes("[Process exited]")) {
-      return prev + "\n\n[Process exited]";
+    } catch {
+      freshOutput += event.data;
+      setTerminalOutput(freshOutput);
     }
-    return prev;
-  });
+  };
+
+  socket.onerror = (error) => {
+    setIsRunning(false);
+    freshOutput += `\nWebSocket error: ${error.message}`;
+    setTerminalOutput(freshOutput);
+  };
+
+  socket.onclose = () => {
+    setIsRunning(false);
+    if (!freshOutput.includes("[Process exited]")) {
+      freshOutput += "\n\n[Process exited]";
+    }
+    setTerminalOutput(freshOutput);
+  };
 };
     };
 
