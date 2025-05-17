@@ -70,10 +70,11 @@ int main() {
       setIsRunning(false);
       setTerminalOutput((prev) => prev + "\n\n[Process exited]");
     } else if (json.output) {
-  setTerminalOutput((prev) =>
-    prev + json.output.replace(/\[Process exited\]/g, "")
-  );
-  } catch {
+      setTerminalOutput((prev) =>
+        prev + json.output.replace(/\[Process exited\]/g, "")
+      );
+    }
+  } catch (err) {
     // Handle non-JSON output
     setTerminalOutput((prev) => prev + event.data);
   }
