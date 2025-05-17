@@ -4,6 +4,7 @@ import ProgramSelector from "./components/ProgramSelector";
 import "./index.css";
 import { HiOutlineSwitchHorizontal, HiOutlineSwitchVertical } from "react-icons/hi";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
+import { FaSave } from "react-icons/fa";
 
 export default function App() {
   const [code, setCode] = useState("");
@@ -60,17 +61,23 @@ int main() {
     };
 
     socket.onmessage = (event) => {
-      try {
-        const json = JSON.parse(event.data);
-        if (json.type === "done") {
-          setIsRunning(false);
-        } else {
-          setTerminalOutput((prev) => prev + event.data);
-        }
-      } catch {
-        setTerminalOutput((prev) => prev + event.data);
-      }
-    };
+  try {
+    const json = JSON.parse(event.data);
+
+    if (json.type === "done") {
+      // Delay `[Process exited]` so output comes first
+      setTimeout(() => {
+        setTerminalOutput((prev) => prev + "\n\n[Process exited]");
+        setIsRunning(false);
+      }, 200); 
+    } else if (json.output) {
+      setTerminalOutput((prev) => prev + json.output);
+    }
+  } catch {
+    setTerminalOutput((prev) => prev + event.data);
+  }
+};
+
 
     socket.onerror = (error) => {
       setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
@@ -111,6 +118,20 @@ int main() {
   const handleToggleLayout = () => {
     setIsVerticalLayout((prev) => !prev);
   };
+const handleSaveCode = () => {
+  const extMap = {
+    python: "py",
+    javascript: "js",
+    cpp: "cpp"
+  };
+  const blob = new Blob([code], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `main.${extMap[language] || 'txt'}`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
   return (
     <div className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"} h-screen w-screen p-4 flex flex-col overflow-hidden`}>
@@ -138,6 +159,13 @@ int main() {
             <div className={`${isDarkMode ? "bg-gray-800" : "bg-gray-200"} flex justify-between p-3 rounded-t z-10 sticky top-0`}>
               <h2 className="text-md font-bold">main.{language === "javascript" ? "js" : language === "cpp" ? "cpp" : "py"}</h2>
               <div className="flex gap-2">
+                <button
+                  onClick={handleSaveCode}
+                  title="Save Code"
+                  className="ml-2 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white flex items-center gap-2"
+                >
+                  <FaSave size={20} /> Save Code
+                </button>
                 <button onClick={handleToggleLayout} className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 flex items-center gap-2">
                   {isVerticalLayout ? <HiOutlineSwitchHorizontal size={20} /> : <HiOutlineSwitchVertical size={20} />}
                 </button>
