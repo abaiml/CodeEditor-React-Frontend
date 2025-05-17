@@ -44,11 +44,9 @@ int main() {
   const handleRun = () => {
   if (isRunning) return;
 
-  // Clear output and reset state
   setTerminalOutput("");
   setIsRunning(true);
 
-  // Close previous socket if exists
   if (ws) {
     ws.close();
     setWs(null);
@@ -59,6 +57,8 @@ int main() {
   const socket = new WebSocket(WS_URL);
   setWs(socket);
 
+  let outputBuffer = "";
+
   socket.onopen = () => {
     socket.send(JSON.stringify({ code, language }));
   };
@@ -67,14 +67,16 @@ int main() {
     try {
       const json = JSON.parse(event.data);
       if (json.type === "done") {
+        // Process done, update state once with full output + exit message
+        setTerminalOutput(outputBuffer + "\n\n[Process exited]");
         setIsRunning(false);
-        // Do NOT append "[Process exited]" here
       } else if (json.output) {
-        setTerminalOutput((prev) => prev + json.output.replace(/\[Process exited\]/g, ""));
+        // Append output to buffer (no state update here)
+        outputBuffer += json.output.replace(/\[Process exited\]/g, "");
       }
     } catch {
-      // Fallback for raw text output
-      setTerminalOutput((prev) => prev + event.data);
+      // For non-JSON text messages append to buffer
+      outputBuffer += event.data;
     }
   };
 
@@ -84,15 +86,17 @@ int main() {
   };
 
   socket.onclose = () => {
-    setIsRunning(false);
-    setTerminalOutput((prev) => {
-      const clean = prev.trimEnd();
-      return clean.endsWith("[Process exited]")
-        ? clean
-        : clean + "\n\n[Process exited]";
-    });
+    if (isRunning) {
+      // If socket closes unexpectedly, add exit message
+      setTerminalOutput((prev) => {
+        if (prev.includes("[Process exited]")) return prev;
+        return prev + "\n\n[Process exited]";
+      });
+      setIsRunning(false);
+    }
   };
 };
+
 
 
 
