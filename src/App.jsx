@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import CodeEditor from "./components/CodeEditor"; // Your Monaco Editor wrapper
+import CodeEditor from "./components/CodeEditor";
 import ProgramSelector from "./components/ProgramSelector";
 import "./index.css";
 import { HiOutlineSwitchHorizontal, HiOutlineSwitchVertical } from "react-icons/hi";
@@ -25,23 +25,24 @@ using namespace std;
 int main() {
     cout << "Hello, C++!" << endl;
     return 0;
-}`,
+}`
   };
 
-  // Load default code on language change
   useEffect(() => {
     setCode(templates[language] || "");
     localStorage.setItem("selectedLanguage", language);
   }, [language]);
 
-  // Scroll terminal output to bottom on update
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [terminalOutput]);
 
-  // Handle WebSocket setup and events
+  useEffect(() => {
+    if (terminalRef.current) terminalRef.current.focus();
+  }, [ws]);
+
   const handleRun = () => {
     if (ws) {
       ws.close();
@@ -51,27 +52,25 @@ int main() {
     setTerminalOutput("");
     setIsRunning(true);
 
-    const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws");
+    const socket = new WebSocket("wss://codeeditor-production-0337.up.railway.app/ws"); // Change if hosted elsewhere
+    setWs(socket);
 
     socket.onopen = () => {
-      // Send initial code + language as JSON
       socket.send(JSON.stringify({ code, language }));
     };
 
     socket.onmessage = (event) => {
-  try {
-    const json = JSON.parse(event.data);
-    if (json.type === "done") {
-      // ✅ Execution is done — stop loading
-      setLoading(false);
-    } else {
-      setTerminalOutput((prev) => prev + "\n" + event.data);
-    }
-  } catch {
-    // Plain text (not JSON)
-    setTerminalOutput((prev) => prev + "\n" + event.data);
-  }
-};
+      try {
+        const json = JSON.parse(event.data);
+        if (json.type === "done") {
+          setIsRunning(false);
+        } else {
+          setTerminalOutput((prev) => prev + event.data);
+        }
+      } catch {
+        setTerminalOutput((prev) => prev + event.data);
+      }
+    };
 
     socket.onerror = (error) => {
       setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
@@ -82,11 +81,8 @@ int main() {
       setTerminalOutput((prev) => prev + "\n\n[Process exited]");
       setIsRunning(false);
     };
-
-    setWs(socket);
   };
 
-  // Handle user input in terminal and send to backend
   const handleTerminalInput = (e) => {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
@@ -100,7 +96,6 @@ int main() {
       ws.send(key);
     }
 
-    // Prevent default to avoid messing with browser shortcuts or inputs
     e.preventDefault();
   };
 
@@ -119,25 +114,17 @@ int main() {
 
   return (
     <div className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"} h-screen w-screen p-4 flex flex-col overflow-hidden`}>
-
-      {/* Header */}
       <div className="flex flex-col gap-2 flex-none">
         <h1 className="text-3xl font-bold">Online Code Editor</h1>
         <h3 className="text-lg font-bold">{language} Compiler</h3>
       </div>
 
-      {/* Main layout */}
       <div className="flex flex-row w-full h-full gap-2 mt-2 overflow-hidden">
-
-        {/* Sidebar */}
         <div className={`w-16 h-full flex flex-col items-center rounded ${isDarkMode ? "bg-gray-800 text-white" : "bg-gray-200 text-black"}`}>
           <ProgramSelector selected={language} onSelect={setLanguage} isDarkMode={isDarkMode} />
         </div>
 
-        {/* Editor + Terminal */}
         <div className={`flex ${isVerticalLayout ? "flex-col" : "flex-row"} w-full h-full gap-2 overflow-hidden min-h-0`}>
-
-          {/* Code Editor */}
           <div
             className={`flex flex-col border rounded overflow-hidden
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
@@ -148,7 +135,6 @@ int main() {
               height: isVerticalLayout ? "50%" : "100%",
             }}
           >
-            {/* Sticky Header */}
             <div className={`${isDarkMode ? "bg-gray-800" : "bg-gray-200"} flex justify-between p-3 rounded-t z-10 sticky top-0`}>
               <h2 className="text-md font-bold">main.{language === "javascript" ? "js" : language === "cpp" ? "cpp" : "py"}</h2>
               <div className="flex gap-2">
@@ -174,13 +160,11 @@ int main() {
               </div>
             </div>
 
-            {/* Scrollable Code Editor Area */}
             <div className="flex-grow overflow-auto min-h-0">
               <CodeEditor code={code} setCode={setCode} theme={theme} />
             </div>
           </div>
 
-          {/* Terminal Output */}
           <div
             className={`flex flex-col border rounded
               ${isDarkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}
@@ -206,13 +190,12 @@ int main() {
               ref={terminalRef}
               tabIndex={0}
               onKeyDown={handleTerminalInput}
-              className="flex-grow overflow-auto p-3 font-mono text-sm whitespace-pre-wrap outline-none"
-              style={{ userSelect: "text", whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+              className="terminal flex-grow overflow-auto p-3 font-mono text-sm outline-none"
+              style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
             >
               {terminalOutput || "[Output will appear here]"}
             </pre>
           </div>
-
         </div>
       </div>
     </div>
