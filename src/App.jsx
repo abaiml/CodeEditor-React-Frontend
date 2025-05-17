@@ -65,21 +65,20 @@ int main() {
   };
 
   socket.onmessage = (event) => {
-    try {
-      const json = JSON.parse(event.data);
-      if (json.type === "done") {
-        setIsRunning(false);
-        freshOutput += "\n\n[Process exited]";
-        setTerminalOutput(freshOutput); // Flush once
-      } else if (json.output) {
-        freshOutput += json.output;
-        setTerminalOutput(freshOutput);
-      }
-    } catch {
-      freshOutput += event.data;
-      setTerminalOutput(freshOutput);
+  try {
+    const json = JSON.parse(event.data);
+    if (json.type === "done") {
+      setIsRunning(false);
+      setTerminalOutput((prev) => prev + "\n\n[Process exited]");
+    } else if (json.output) {
+      freshOutput += json.output;
+      setTerminalOutput((prev) => prev + json.output);
     }
-  };
+  } catch {
+    freshOutput += event.data;
+    setTerminalOutput((prev) => prev + event.data);
+  }
+};
 
   socket.onerror = (error) => {
     setIsRunning(false);
@@ -88,14 +87,12 @@ int main() {
   };
 
   socket.onclose = () => {
-    setIsRunning(false);
-    if (!freshOutput.includes("[Process exited]")) {
-      freshOutput += "\n\n[Process exited]";
-    }
-    setTerminalOutput(freshOutput);
-  };
+  setIsRunning(false);
+  setTerminalOutput((prev) => {
+    return prev.includes("[Process exited]") ? prev : prev + "\n\n[Process exited]";
+  });
 };
-
+  }
 
   const handleStop = () => {
     if (!isRunning) return;
