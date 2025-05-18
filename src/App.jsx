@@ -127,16 +127,13 @@ int main() {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
     e.preventDefault();
-
+  
     if (e.key === "Backspace") {
-      ws.send("\b");
-      setTerminalOutput((prev) => prev.slice(0, -1));
+      ws.send("\x7f");  
     } else if (e.key === "Enter") {
       ws.send("\n");
-      setTerminalOutput((prev) => prev + "\n");
     } else if (e.key.length === 1) {
       ws.send(e.key);
-      setTerminalOutput((prev) => prev + e.key);
     }
   };
 
