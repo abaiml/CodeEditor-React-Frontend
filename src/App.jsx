@@ -17,6 +17,18 @@ export default function App() {
   const terminalRef = useRef(null);
   const [isRunning, setIsRunning] = useState(false);
 
+  function applyBackspaces(text) {
+  const out = [];
+  for (const ch of text) {
+    if (ch === "\b") {
+      out.pop();
+    } else {
+      out.push(ch);
+    }
+  }
+  return out.join("");
+}
+  
   const templates = {
     python: `print("Hello, Python!")`,
     javascript: `console.log("Hello, JavaScript!");`,
@@ -76,17 +88,15 @@ int main() {
         socket.close();
         setWs(null);
       } else if (json.output) {
-        // Append output immediately to terminal (no silent buffering)
-        // Remove any "[Process exited]" markers from output chunks to avoid duplicates
-        const cleanOutput = json.output.replace(/\[Process exited\]/g, "");
-        outputBuffer += cleanOutput;
-        setTerminalOutput((prev) => prev + cleanOutput);
+        const clean = json.output.replace(/\[Process exited\]/g, "");
+        const filtered = applyBackspaces(clean);
+        outputBuffer += filtered;
+        setTerminalOutput((prev) => prev + filtered);
       }
     } catch {
-      // If event.data is not JSON, just append as-is
-      const cleanOutput = event.data.replace(/\[Process exited\]/g, "");
-      outputBuffer += cleanOutput;
-      setTerminalOutput((prev) => prev + cleanOutput);
+        const cleanOutput = event.data.replace(/\[Process exited\]/g, "");
+        const filtered = applyBackspaces(cleanOutput);
+        setTerminalOutput((prev) => prev + filtered);
     }
   };
 
@@ -129,7 +139,7 @@ int main() {
     e.preventDefault();
   
     if (e.key === "Backspace") {
-      ws.send("\x7f");  
+      ws.send("\b");
     } else if (e.key === "Enter") {
       ws.send("\n");
     } else if (e.key.length === 1) {
