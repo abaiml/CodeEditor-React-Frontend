@@ -293,7 +293,7 @@ int main() {
             </div>
 
             <div className="flex-grow overflow-auto min-h-0">
-              <CodeEditor code={code} setCode={setCode} theme={theme} />
+              <CodeEditor code={code} setCode={setCode} theme={theme} language={language}/>
             </div>
           </div>
 
