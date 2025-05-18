@@ -64,13 +64,13 @@ int main() {
     ws.close();
     setWs(null);
   }
-  let outputBuffer = ""; 
+
   const token = encodeURIComponent(import.meta.env.VITE_WS_TOKEN);
   const WS_URL = `${import.meta.env.VITE_WS_URL}?t=${token}`;
   const socket = new WebSocket(WS_URL);
   setWs(socket);
 
-  // Clear output buffer for incremental updates
+  // Only declare outputBuffer once
   let outputBuffer = "";
 
   socket.onopen = () => {
@@ -78,38 +78,34 @@ int main() {
     terminalRef.current?.focus();
   };
 
+  socket.onmessage = (event) => {
+    let rawChunk = "";
 
-socket.onmessage = (event) => {
-  let rawChunk = "";
+    try {
+      const json = JSON.parse(event.data);
 
-  try {
-    const json = JSON.parse(event.data);
+      if (json.type === "done") {
+        outputBuffer += "\n\n[Process exited]";
+        setTerminalOutput(applyBackspaces(outputBuffer));
+        setIsRunning(false);
+        socket.close();
+        setWs(null);
+        return;
+      }
 
-    if (json.type === "done") {
-      outputBuffer += "\n\n[Process exited]";
-      setTerminalOutput(applyBackspaces(outputBuffer));
-      setIsRunning(false);
-      socket.close();
-      setWs(null);
-      return;
+      if (json.output) {
+        rawChunk = json.output.replace(/\[Process exited\]/g, "");
+      }
+    } catch {
+      rawChunk = event.data.replace(/\[Process exited\]/g, "");
     }
 
-    if (json.output) {
-      rawChunk = json.output.replace(/\[Process exited\]/g, "");
+    if (rawChunk) {
+      outputBuffer += rawChunk;
+      const filteredOutput = applyBackspaces(outputBuffer);
+      setTerminalOutput(filteredOutput);
     }
-  } catch {
-    rawChunk = event.data.replace(/\[Process exited\]/g, "");
-  }
-
-  if (rawChunk) {
-    outputBuffer += rawChunk;
-    // Apply backspaces to the entire buffer (not just chunk)
-    const filteredOutput = applyBackspaces(outputBuffer);
-    setTerminalOutput(filteredOutput);
-  }
-};
-
-
+  };
 
   socket.onerror = (error) => {
     setIsRunning(false);
@@ -120,7 +116,6 @@ socket.onmessage = (event) => {
 
   socket.onclose = () => {
     if (isRunning) {
-      // Unexpected close during execution
       setTerminalOutput((prev) => {
         if (prev.includes("[Process exited]")) return prev;
         return prev + "\n\n[Process exited]";
