@@ -79,27 +79,37 @@ int main() {
   };
 
   socket.onmessage = (event) => {
-    try {
-      const json = JSON.parse(event.data);
+  let chunk;
+  try {
+    const json = JSON.parse(event.data);
 
-      if (json.type === "done") {
-        // Process finished, append exit marker
-        setTerminalOutput((prev) => prev + "\n\n[Process exited]");
-        setIsRunning(false);
-        socket.close();
-        setWs(null);
-      } else if (json.output) {
-        const clean = json.output.replace(/\[Process exited\]/g, "");
-        const filtered = applyBackspaces(clean);
-        outputBuffer += filtered;
-        setTerminalOutput((prev) => prev + filtered);
-      }
-    } catch {
-        const cleanOutput = event.data.replace(/\[Process exited\]/g, "");
-        const filtered = applyBackspaces(cleanOutput);
-        setTerminalOutput((prev) => prev + filtered);
+    if (json.type === "done") {
+      // Process finished, append exit marker
+      outputBuffer += "\n\n[Process exited]";
+      setTerminalOutput(outputBuffer);
+      setIsRunning(false);
+      socket.close();
+      setWs(null);
+      return;
     }
-  };
+
+    if (json.output) {
+      // strip any stray exit markers
+      chunk = json.output.replace(/\[Process exited\]/g, "");
+    }
+  } catch {
+    // non-JSON payload
+    chunk = event.data.replace(/\[Process exited\]/g, "");
+  }
+
+  if (chunk != null) {
+    const filtered = applyBackspaces(chunk);
+    outputBuffer += filtered;
+    // replace entire contents with the up-to-date buffer
+    setTerminalOutput(outputBuffer);
+  }
+};
+
 
   socket.onerror = (error) => {
     setIsRunning(false);
