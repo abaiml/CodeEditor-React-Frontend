@@ -47,6 +47,7 @@ int main() {
   setTerminalOutput("");
   setIsRunning(true);
 
+  // Close any previous socket cleanly
   if (ws) {
     ws.close();
     setWs(null);
@@ -57,6 +58,7 @@ int main() {
   const socket = new WebSocket(WS_URL);
   setWs(socket);
 
+  // Clear output buffer for incremental updates
   let outputBuffer = "";
 
   socket.onopen = () => {
@@ -66,33 +68,44 @@ int main() {
   socket.onmessage = (event) => {
     try {
       const json = JSON.parse(event.data);
+
       if (json.type === "done") {
-        // Process done, update state once with full output + exit message
-        setTerminalOutput(outputBuffer + "\n\n[Process exited]");
+        // Process finished, append exit marker
+        setTerminalOutput((prev) => prev + "\n\n[Process exited]");
         setIsRunning(false);
+        socket.close();
+        setWs(null);
       } else if (json.output) {
-        // Append output to buffer (no state update here)
-        outputBuffer += json.output.replace(/\[Process exited\]/g, "");
+        // Append output immediately to terminal (no silent buffering)
+        // Remove any "[Process exited]" markers from output chunks to avoid duplicates
+        const cleanOutput = json.output.replace(/\[Process exited\]/g, "");
+        outputBuffer += cleanOutput;
+        setTerminalOutput((prev) => prev + cleanOutput);
       }
     } catch {
-      // For non-JSON text messages append to buffer
-      outputBuffer += event.data;
+      // If event.data is not JSON, just append as-is
+      const cleanOutput = event.data.replace(/\[Process exited\]/g, "");
+      outputBuffer += cleanOutput;
+      setTerminalOutput((prev) => prev + cleanOutput);
     }
   };
 
   socket.onerror = (error) => {
     setIsRunning(false);
     setTerminalOutput((prev) => prev + `\nWebSocket error: ${error.message}`);
+    socket.close();
+    setWs(null);
   };
 
   socket.onclose = () => {
     if (isRunning) {
-      // If socket closes unexpectedly, add exit message
+      // Unexpected close during execution
       setTerminalOutput((prev) => {
         if (prev.includes("[Process exited]")) return prev;
         return prev + "\n\n[Process exited]";
       });
       setIsRunning(false);
+      setWs(null);
     }
   };
 };
