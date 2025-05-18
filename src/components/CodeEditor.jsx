@@ -1,16 +1,16 @@
 import Editor from "@monaco-editor/react";
 
-export default function CodeEditor({ code, setCode, theme }) {
+export default function CodeEditor({ code, setCode, theme, language }) {
   return (
     <div className="h-full">
       <Editor
         height="100%"
-        defaultLanguage="python"
+        language={language}
         theme={theme}
         value={code}
         onChange={(value) => setCode(value)}
         options={{
-          fontSize: 18,
+          fontSize: 17,
           minimap: { enabled: false },
         }}
       />
