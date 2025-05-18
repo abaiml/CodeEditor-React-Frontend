@@ -64,7 +64,7 @@ int main() {
     ws.close();
     setWs(null);
   }
-
+  let outputBuffer = ""; 
   const token = encodeURIComponent(import.meta.env.VITE_WS_TOKEN);
   const WS_URL = `${import.meta.env.VITE_WS_URL}?t=${token}`;
   const socket = new WebSocket(WS_URL);
@@ -78,15 +78,16 @@ int main() {
     terminalRef.current?.focus();
   };
 
-  socket.onmessage = (event) => {
-  let chunk;
+
+socket.onmessage = (event) => {
+  let rawChunk = "";
+
   try {
     const json = JSON.parse(event.data);
 
     if (json.type === "done") {
-      // Process finished, append exit marker
       outputBuffer += "\n\n[Process exited]";
-      setTerminalOutput(outputBuffer);
+      setTerminalOutput(applyBackspaces(outputBuffer));
       setIsRunning(false);
       socket.close();
       setWs(null);
@@ -94,21 +95,20 @@ int main() {
     }
 
     if (json.output) {
-      // strip any stray exit markers
-      chunk = json.output.replace(/\[Process exited\]/g, "");
+      rawChunk = json.output.replace(/\[Process exited\]/g, "");
     }
   } catch {
-    // non-JSON payload
-    chunk = event.data.replace(/\[Process exited\]/g, "");
+    rawChunk = event.data.replace(/\[Process exited\]/g, "");
   }
 
-  if (chunk != null) {
-    const filtered = applyBackspaces(chunk);
-    outputBuffer += filtered;
-    // replace entire contents with the up-to-date buffer
-    setTerminalOutput(outputBuffer);
+  if (rawChunk) {
+    outputBuffer += rawChunk;
+    // Apply backspaces to the entire buffer (not just chunk)
+    const filteredOutput = applyBackspaces(outputBuffer);
+    setTerminalOutput(filteredOutput);
   }
 };
+
 
 
   socket.onerror = (error) => {
