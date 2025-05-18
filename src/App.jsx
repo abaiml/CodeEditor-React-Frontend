@@ -20,8 +20,8 @@ export default function App() {
   function applyBackspaces(text) {
   const out = [];
   for (const ch of text) {
-    if (ch === "\b") {
-      out.pop();
+    if (ch === "\b" || ch === "\x7f" || ch === "\x08") {
+        out.pop();
     } else {
       out.push(ch);
     }
