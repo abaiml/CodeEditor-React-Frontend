@@ -75,6 +75,7 @@ int main() {
 
   socket.onopen = () => {
     socket.send(JSON.stringify({ code, language }));
+    terminalRef.current?.focus();
   };
 
   socket.onmessage = (event) => {
@@ -139,7 +140,7 @@ int main() {
     e.preventDefault();
   
     if (e.key === "Backspace") {
-      ws.send("\b");
+      ws.send("\x7f");
     } else if (e.key === "Enter") {
       ws.send("\n");
     } else if (e.key.length === 1) {
